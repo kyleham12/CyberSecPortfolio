@@ -72,14 +72,49 @@
       will allow me to simulate real-world attack scenarios and develop a deeper understanding of network behavior, system vulnerabilities, and basic red team operations.
     </p>
 
-    <h4>Installation and Setup</h4>
+    <h3>Installation and Setup</h3>
     <p>
       After installing and configuring Oracle VirtualBox, I proceeded to build my virtual lab environment by setting up both Windows 10 and Kali Linux virtual machines. I downloaded the official ISO image files from their respective sources and followed VirtualBox’s configuration steps to provision each VM. This setup serves as the foundation for simulating real-world cybersecurity scenarios in a controlled environment.
 
-Below is a snapshot of my home lab architecture as configured in VirtualBox:
+Below is a snapshot of my home lab architecture as configured in VirtualBox, with the first two VMs being Windows 10 and Kali Linux respectively:
     </p>
 
     <img src="homelab.png" alt="Screenshot of VirtualBox Home Lab Configuration" width="700">
+
+    <h3>Network Configuration</h3>
+<p>
+  With the Windows 10 and Kali Linux virtual machines successfully installed, the next step was to configure the internal network that would allow both systems to communicate with each other. This internal connectivity is essential for generating and analyzing telemetry in simulated attack scenarios.
+</p>
+
+<p>
+  I began by opening the VirtualBox settings for both VMs and configuring one of their network adapters to use the <strong>Internal Network</strong> mode. I assigned both VMs to the same internal network name, <code>intnet</code>, ensuring they were on the same virtual switch.
+</p>
+
+<img src="winsetting.png" alt="Screenshot of Windows network setting" width="350">
+<img src="kalisetting.png" alt="Screenshot of Kali network setting" width="350">
+
+<p>
+  Once the adapter settings were in place, I assigned static IP addresses to both machines using the <code>172.16.0.0/24</code> subnet. On the Windows machine, I configured the network adapter manually through the GUI to use <code>172.16.0.3</code> with a subnet mask of <code>255.255.255.0</code>. I verified the configuration by running the <code>ipconfig</code> command in Command Prompt.
+</p>
+
+<p>
+  On the Kali Linux machine, I opted to configure the interface manually via the terminal to reinforce my familiarity with CLI-based networking. I assigned the IP <code>172.16.0.2</code> to the appropriate interface using the <code>ip addr add</code> command, and confirmed the change with <code>ip a</code>.
+</p>
+
+<p>
+  To verify connectivity between the two systems, I used the <code>ping</code> command on each machine. Both machines were able to reach one another successfully, confirming that the internal network was functioning properly.
+</p>
+
+<p>
+  With connectivity established, the core infrastructure of the home lab was complete. This setup provides a reliable and controlled environment to simulate real-world security scenarios and continue expanding my knowledge through practical experimentation.
+</p>
+
+    <h3>⚠️ Challenges I Encountered</h3>
+<ul>
+  <li><strong>Windows Firewall Blocking ICMP:</strong> Initially, pings from Kali to the Windows machine failed due to the firewall blocking inbound echo requests. This required creating a custom firewall rule to allow ICMP traffic.</li>
+</ul>
+
+
 
     <p><a href="projects.html">⬅ Back to Projects</a></p>
   </main>
