@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Active Directory | Kyle D. Hamilton</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <h1>Kyle D. Hamilton</h1>
+      <ul>
+        <li><a href="index.html">About</a></li>
+        <li><a href="projects.html">Projects</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h2>🧱 Active Directory Lab</h2>
+    <p>
+      This section documents my setup and experimentation with Active Directory in my virtual home lab. I created a Windows Server 2022 Domain Controller (DC), configured users and organizational units (OUs), and connected Windows 10 clients to the domain for testing authentication, GPOs, and red team techniques.
+    </p>
+
+    <h3>Domain Controller Setup</h3>
+    <p>
+      I began by promoting a fresh Windows Server 2022 instance to a Domain Controller using the <code>Server Manager</code>. The domain was named <code>mydomain.com</code>. I configured DNS alongside AD DS and ensured the server had a static IP address on the internal network.
+    </p>
+
+    <img src="images/dc-setup.png" alt="Domain Controller Setup Screenshot" width="700">
+
+    <h3>Organizational Units & User Creation</h3>
+    <p>
+      Using the Active Directory Users and Computers (ADUC) console, I created multiple OUs to simulate departments (e.g., HR, IT, Finance) and added test users and groups within them. I also applied Group Policy Objects (GPOs) to specific OUs to restrict features and enforce policies.
+    </p>
+
+    <img src="images/aduc-structure.png" alt="ADUC Structure Screenshot" width="700">
+
+    <h3>Red Team Testing</h3>
+    <p>
+      With the environment in place, I used tools like BloodHound and PowerView to enumerate AD objects, identify privilege escalation paths, and simulate attacks like credential harvesting and lateral movement in a safe environment.
+    </p>
+
+    <img src="images/bloodhound-graph.png" alt="BloodHound Graph Screenshot" width="700">
+
+    <h3>Skills Learned</h3>
+    <ul>
+      <li>Windows Server 2022 AD Domain Controller configuration</li>
+      <li>DNS setup and troubleshooting within AD environments</li>
+      <li>Managing users, groups, and GPOs in ADUC</li>
+      <li>Red team enumeration techniques with BloodHound and PowerView</li>
+      <li>Simulated credential dumping and escalation paths</li>
+    </ul>
+
+    <h3>Challenges I Encountered</h3>
+    <ul>
+      <li>Initial DNS misconfiguration prevented domain joining from clients</li>
+      <li>BloodHound ingestion failed due to WinRM and permissions needing adjustment</li>
+      <li>GPO changes not taking effect until forced via <code>gpupdate /force</code> and system reboots</li>
+    </ul>
+
+    <p><a href="projects.html">⬅ Back to Projects</a></p>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Kyle D. Hamilton</p>
+  </footer>
+</body>
+</html>
