@@ -31,7 +31,7 @@
 Below is a snapshot of my home lab architecture as configured in VirtualBox, with the first two VMs being Windows 10 and Kali Linux respectively:
     </p>
 
-    <img src="homelab.png" alt="Screenshot of VirtualBox Home Lab Configuration" width="700">
+    <img src="infra/homelab.png" alt="Screenshot of VirtualBox Home Lab Configuration" width="700">
 
     <h3>Network Configuration</h3>
 <p>
@@ -42,28 +42,28 @@ Below is a snapshot of my home lab architecture as configured in VirtualBox, wit
   I began by opening the VirtualBox settings for both VMs and configuring one of their network adapters to use the <strong>Internal Network</strong> mode. I assigned both VMs to the same internal network name, <code>intnet</code>, ensuring they were on the same virtual switch.
 </p>
 
-<img src="winsetting.png" alt="Screenshot of Windows network setting" width="500">
-<img src="kalisetting.png" alt="Screenshot of Kali network setting" width="500">
+<img src="infra/winsetting.png" alt="Screenshot of Windows network setting" width="500">
+<img src="infra/kalisetting.png" alt="Screenshot of Kali network setting" width="500">
 
 <p>
   Once the adapter settings were in place, I assigned static IP addresses to both machines using the <code>172.16.0.0/24</code> subnet. On the Windows machine, I configured the network adapter manually through the GUI to use <code>172.16.0.3</code> with a subnet mask of <code>255.255.255.0</code>. I verified the configuration by running the <code>ipconfig</code> command in Command Prompt.
 </p>
 
-<img src="wingui.png" width="500">
-<img src="winconfig.png" width="500">
+<img src="infra/wingui.png" width="500">
+<img src="infra/winconfig.png" width="500">
 
 <p>
   On the Kali Linux machine, I opted to configure the interface manually via the terminal to reinforce my familiarity with CLI-based networking. I assigned the IP <code>172.16.0.2</code> to the appropriate interface using the <code>ip addr add</code> command, and confirmed the change with <code>ip a</code>.
 </p>
 
-<img src="kalicomms.png" width="700">
+<img src="infra/kalicomms.png" width="700">
 
 <p>
   To verify connectivity between the two systems, I used the <code>ping</code> command on each machine. Both machines were able to reach one another successfully, confirming that the internal network was functioning properly.
 </p>
 
-<img src="winping.png" width="500">
-<img src="kaliping.png" width="500">
+<img src="infra/winping.png" width="500">
+<img src="infra/kaliping.png" width="500">
 
 <p>
   With connectivity established, the core infrastructure of the home lab was complete. This setup provides a reliable and controlled environment to simulate real-world security scenarios and continue expanding my knowledge through practical experimentation.
