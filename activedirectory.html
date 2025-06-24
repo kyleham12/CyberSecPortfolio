@@ -28,27 +28,27 @@
       I began by downloading a Windows Server 2022 ISO file from the Microsoft website and setting up the VM for it in Virtual Box. I then promoted the fresh Windows Server 2022 instance to a Domain Controller using the <code>Server Manager</code>. The domain was named <code>mydomain.com</code>. I configured DNS alongside AD DS and ensured the server had a static IP address on the internal network.
     </p>
 
-    <img src="images/dc-setup.png" alt="Domain Controller Setup Screenshot" width="700">
+    <img src="dashboard.png" alt="Domain Controller Setup Screenshot" width="700">
 
     <h3>Organizational Units & User Creation using Powershell Scripting</h3>
     <p>
-      Using the Active Directory Users and Computers (ADUC) console, I created multiple OUs to simulate departments (e.g., HR, IT, Finance) and added test users and groups within them. To populate the environment, I automated user creation using a PowerShell script that imported 1,000 randomly generated user accounts from a text file. This streamlined approach allowed me to efficiently build a diverse user base for testing policies and enumeration tools.
+      Using the Active Directory Users and Computers (ADUC) console, I created multiple OUs to simulate departments like HR, IT, Finance and added test users and groups within them. To populate the environment, I automated user creation using a PowerShell script that imported 1,000 randomly generated user accounts from a text file. This streamlined approach allowed me to efficiently build a diverse user base for testing policies and enumeration tools.
     </p>
 
-    <img src="images/aduc-structure.png" alt="ADUC Structure Screenshot" width="700">
+    <img src="groups.png" alt="ADUC Structure Screenshot" width="700"><img src="script.png" alt="ADUC Structure Screenshot" width="700">
 
     <h3>Group Policy Object and Secuirty Policy Creation/Testing</h3>
     <p>
       Utilizing the Group Policy Management Console (GPMC), I created and applied several Group Policy Objects (GPOs) and local security policies. These included policies such as mandatory desktop wallpapers, enforced password complexity and expiration, and restricted user rights. These configurations helped establish control boundaries and simulate the security posture of a corporate domain.
     </p>
 
-    <img src="images/bloodhound-graph.png" alt="BloodHound Graph Screenshot" width="700">
+    <img src="gpo.png" alt="BloodHound Graph Screenshot" width="700">
 
     <p>
       To validate the effectiveness of these policies, I conducted testing on a domain-joined Windows 10 client. Specifically, I confirmed that the Account Lockout Policy was functioning as intended—locking users out for 30 minutes after three failed login attempts.
     </p>
 
-    <img src="images/bloodhound-graph.png" alt="BloodHound Graph Screenshot" width="700">
+    <img src="lockout.png" alt="BloodHound Graph Screenshot" width="700">
 
     <h3>Conclusion</h3>
     <p>
@@ -58,16 +58,13 @@
     <h3>Lessons Learned</h3>
     <ul>
       <li>Windows Server 2022 AD Domain Controller configuration</li>
-      <li>DNS setup and troubleshooting within AD environments</li>
+      <li>Joining client machines to the domain</li>
       <li>Managing users, groups, and GPOs in ADUC</li>
-      <li>Red team enumeration techniques with BloodHound and PowerView</li>
-      <li>Simulated credential dumping and escalation paths</li>
     </ul>
 
     <h3>Challenges Encountered</h3>
     <ul>
       <li>Initial DNS misconfiguration prevented domain joining from clients</li>
-      <li>BloodHound ingestion failed due to WinRM and permissions needing adjustment</li>
       <li>GPO changes not taking effect until forced via <code>gpupdate /force</code> and system reboots</li>
     </ul>
 
