@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Splunk Integration | Kyle D. Hamilton</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <h1>Kyle D. Hamilton</h1>
+      <ul>
+        <li><a href="index.html">About</a></li>
+        <li><a href="projects.html">Projects</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h2>🔍 Splunk Integration & SIEM Testing</h2>
+    <p>
+      In this lab, I integrated Splunk into my home network to simulate a Security Information and Event Management (SIEM) solution. Splunk was used to collect, index, and analyze log data from both Windows Server and Windows 10 endpoints within my Active Directory environment.
+    </p>
+
+    <h3>Splunk Installation and Setup</h3>
+    <p>
+      I installed Splunk Enterprise on the domain controller machine and configured the Universal Forwarder to capture log data since the DC is the targeted machine in this simulation. 
+      The forwarders were set up to send Windows Event Logs (Security, System, Application) and PowerShell transcripts to the Splunk server over port 9997, as well as a custom index <code>ad_index</code> for AD specific events.
+    </p>
+
+    <img src="images/splunk-install.png" alt="Splunk Installation Screenshot" width="700">
+
+    <h3>Log Sources and Ingestion</h3>
+    <p>
+      Key log sources included:
+    </p>
+    <ul>
+      <li>Security logs (Event ID 4625 - failed logon attempts)</li>
+      <li>PowerShell logs (command line auditing and execution)</li>
+      <li>System logs related to reboots, service changes, and user logins</li>
+    </ul>
+
+    <p>
+      I tested the ingestion by performing failed logons and account lockouts and searching the event logs for Event ID 4625.
+    </p>
+
+    <img src="images/splunk-events.png" alt="Splunk Event View Screenshot" width="700">
+
+    <h3>Dashboards and Detection Queries</h3>
+    <p>
+      I created basic dashboards to visualize authentication failures, suspicious PowerShell use, and machine activity over time. Sample SPL (Search Processing Language) queries were used to detect brute-force activity, user enumeration, and privilege escalation attempts.
+    </p>
+
+    <img src="images/splunk-dashboard.png" alt="Splunk Dashboard Screenshot" width="700">
+
+    <h3>Skills Learned</h3>
+    <ul>
+      <li>Splunk Enterprise installation and forwarder configuration</li>
+      <li>Windows log collection via Universal Forwarder</li>
+      <li>SPL queries for threat detection</li>
+      <li>Creating dashboards and alert logic</li>
+      <li>Analyzing and interpreting Windows Event Log data</li>
+    </ul>
+
+    <h3>Challenges Encountered</h3>
+    <ul>
+      <li>Initial connectivity issues due to incorrect receiving port settings on the Splunk indexer</li>
+      <li>Forwarders failing to send logs until service restarts and permissions were adjusted</li>
+      <li>Understanding and filtering relevant Windows Event IDs for detection use cases</li>
+    </ul>
+
+    <p><a href="projects.html">⬅ Back to Projects</a></p>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Kyle D. Hamilton</p>
+  </footer>
+</body>
+</html>
