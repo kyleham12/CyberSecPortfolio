@@ -29,7 +29,7 @@
       The forwarders were set up to send Windows Event Logs (Security, System, Application) and PowerShell transcripts to the Splunk server over port 9997, as well as a custom index <code>ad_index</code> for AD specific events.
     </p>
 
-    <img src="images/splunk-install.png" alt="Splunk Installation Screenshot" width="700"> <img src="images/splunk-install.png" alt="Splunk Installation Screenshot" width="700"> <img src="images/splunk-install.png" alt="Splunk Installation Screenshot" width="700">
+    <img src="screenshots/splunk/home.png" alt="Splunk Installation Screenshot" width="700"> <img src="screenshots/splunk/index.png" alt="Splunk Installation Screenshot" width="700"> <img src="screenshots/splunk/port.png" alt="Splunk Installation Screenshot" width="700">
 
     <h3>Log Sources and Ingestion</h3>
     <p>
@@ -45,7 +45,7 @@
       I tested the ingestion by performing failed logons and account lockouts and searching the event logs for Event ID 4625.
     </p>
 
-    <img src="images/splunk-events.png" alt="Splunk Event View Screenshot" width="700">
+    <img src="screenshots/splunk/test.png" alt="Splunk Event View Screenshot" width="700">
 
     <h3>Attack Simulation using Adversarial Techniques/Tools</h3>
     <p>
@@ -56,7 +56,7 @@
       on the Kali Linux machine.
     </p>
 
-    <img src="images/splunk-dashboard.png" alt="Splunk Dashboard Screenshot" width="700"> <img src="images/splunk-dashboard.png" alt="Splunk Dashboard Screenshot" width="700">
+    <img src="screenshots/splunk/crowbar.png" alt="Splunk Dashboard Screenshot" width="700"> <img src="screenshots/splunk/rdp.png" alt="Splunk Dashboard Screenshot" width="700">
 
     <p>
       I used another tool called Atomic Red Team which is a MITRE ATT&CK-mapped framework of individual "atomic" tests. These tests simulate specific adversary techniques like PowerShell script execution which is what I 
@@ -64,14 +64,14 @@
       PowerShell maliciously.
     </p>
 
-    <img src="images/splunk-dashboard.png" alt="Splunk Dashboard Screenshot" width="700">
+    <img src="screenshots/splunk/atr.png" alt="Splunk Dashboard Screenshot" width="700">
 
     <p>
       Below are the resulting logs from the subsequent attacks on the Active Directory environment. The screenshot on the left shows a log from the SPL query <code>EventCode=4625</code> to return the failed logon attempts onto the 'Romeo' account.
       The other screenshot shows the resulting logs from the Atomic Red Team simulated Powershell attack using the SPL query <code>powershell</code>.
     </p>
 
-    <img src="images/splunk-dashboard.png" alt="Splunk Dashboard Screenshot" width="700"> <img src="images/splunk-dashboard.png" alt="Splunk Dashboard Screenshot" width="700">
+    <img src="screenshots/splunk/logon.png" alt="Splunk Dashboard Screenshot" width="700"> <img src="screenshots/splunk/pwrshl.png" alt="Splunk Dashboard Screenshot" width="700">
 
     <h3>Alert Creation in Splunk</h3>
 <p>
@@ -88,7 +88,7 @@ index=main EventCode=4625
 | where count &gt; 5
 </code></pre>
 
-    <img src="images/splunk-dashboard.png" alt="Splunk Dashboard Screenshot" width="700">
+    <img src="screenshots/splunk/alert.png" alt="Splunk Dashboard Screenshot" width="700">
 
 <p>
   Once verified, I saved this query as a real time alert that triggers upon the attack. If triggered, the alert sends an email notification and can be configured to create a ticket or trigger a webhook in production environments.
@@ -102,7 +102,7 @@ index=main EventCode=4625
   <li><strong>Trigger Action:</strong> Email notification & Triggered Alert notification</li>
 </ul>
 
-    <img src="images/splunk-dashboard.png" alt="Splunk Dashboard Screenshot" width="700">
+    <img src="screenshots/splunk/spl.png" alt="Splunk Dashboard Screenshot" width="700">
 
     <h3>Conclusion</h3>
 <p>
