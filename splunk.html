@@ -29,7 +29,7 @@
       The forwarders were set up to send Windows Event Logs (Security, System, Application) and PowerShell transcripts to the Splunk server over port 9997, as well as a custom index <code>ad_index</code> for AD specific events.
     </p>
 
-    <img src="images/splunk-install.png" alt="Splunk Installation Screenshot" width="700">
+    <img src="images/splunk-install.png" alt="Splunk Installation Screenshot" width="700"> <img src="images/splunk-install.png" alt="Splunk Installation Screenshot" width="700"> <img src="images/splunk-install.png" alt="Splunk Installation Screenshot" width="700">
 
     <h3>Log Sources and Ingestion</h3>
     <p>
@@ -47,12 +47,70 @@
 
     <img src="images/splunk-events.png" alt="Splunk Event View Screenshot" width="700">
 
-    <h3>Dashboards and Detection Queries</h3>
+    <h3>Attack Simulation using Adversarial Techniques/Tools</h3>
     <p>
-      I created basic dashboards to visualize authentication failures, suspicious PowerShell use, and machine activity over time. Sample SPL (Search Processing Language) queries were used to detect brute-force activity, user enumeration, and privilege escalation attempts.
+      After setting up and testing Splunk on the DC machine, I went on the Kali Linux machine and started a simulated Active Directory attack on one of the users 'Romeo'. Using a tool called "Crowbar", 
+      a credential brute-forcing automation tool, I attempted a brute force credential attack to RDP into the Romeo account using this command: <code>crowbar -b rdp -u romeo -C passwords.txt -s 172.16.0.1/32
+</code>. I passed in a txt file of passwords to the tool with one of them being the correct one to simulate
+      a great number of logons in a small period of time to create that brute force attack, and result of the tool's execution showed the correct password and the successful RDP attempt, in which I RDP'd into Romeo's account
+      on the Kali Linux machine.
+    </p>
+
+    <img src="images/splunk-dashboard.png" alt="Splunk Dashboard Screenshot" width="700"> <img src="images/splunk-dashboard.png" alt="Splunk Dashboard Screenshot" width="700">
+
+    <p>
+      I used another tool called Atomic Red Team which is a MITRE ATT&CK-mapped framework of individual "atomic" tests. These tests simulate specific adversary techniques like PowerShell script execution which is what I 
+      will be simulating as an attack on the DC machine. After installing Atomic Red Team on the DC machine, I executed this command: <code>Invoke-AtomicTest T1059.001</code> which runs predefined simulated attacks that use 
+      PowerShell maliciously.
     </p>
 
     <img src="images/splunk-dashboard.png" alt="Splunk Dashboard Screenshot" width="700">
+
+    <p>
+      Below are the resulting logs from the subsequent attacks on the Active Directory environment. The screenshot on the left shows a log from the SPL query <code>EventCode=4625</code> to return the failed logon attempts onto the 'Romeo' account.
+      The other screenshot shows the resulting logs from the Atomic Red Team simulated Powershell attack using the SPL query <code>powershell</code>.
+    </p>
+
+    <img src="images/splunk-dashboard.png" alt="Splunk Dashboard Screenshot" width="700"> <img src="images/splunk-dashboard.png" alt="Splunk Dashboard Screenshot" width="700">
+
+    <h3>Alert Creation in Splunk</h3>
+<p>
+  After successfully ingesting Windows security logs of the simulated attacks into Splunk from my Domain Controller and endpoint machines using Universal Forwarders, I configured alerts to detect and respond to suspicious activity in real time.
+</p>
+
+<p>
+  One of the key alerts I created focused on monitoring failed login attempts, mapped to MITRE ATT&CK technique <strong>T1110 – Brute Force</strong>. Using <code>EventCode=4625</code>, I developed a Splunk query to detect when a single user account experiences more than five failed login attempts within a 10-minute window—indicative of a potential brute-force attack.
+</p>
+
+<pre><code>
+index=main EventCode=4625
+| stats count by Account_Name, host
+| where count &gt; 5
+</code></pre>
+
+    <img src="images/splunk-dashboard.png" alt="Splunk Dashboard Screenshot" width="700">
+
+<p>
+  Once verified, I saved this query as a real time alert that triggers upon the attack. If triggered, the alert sends an email notification and can be configured to create a ticket or trigger a webhook in production environments.
+</p>
+
+<h4>Alert Configuration Overview:</h4>
+<ul>
+  <li><strong>Title:</strong> Excessive Failed Logon Attempts</li>
+  <li><strong>Alert Type:</strong> Real Time</li>
+  <li><strong>Trigger Condition:</strong> Number of results > 0</li>
+  <li><strong>Trigger Action:</strong> Email notification & Triggered Alert notification</li>
+</ul>
+
+    <img src="images/splunk-dashboard.png" alt="Splunk Dashboard Screenshot" width="700">
+
+    <h3>Conclusion</h3>
+<p>
+  This lab gave me hands-on experience deploying Splunk as a SIEM within an Active Directory environment. I configured log ingestion with Universal Forwarders, simulated real-world attacks using Crowbar and Atomic Red Team, and built alerts to detect brute-force and PowerShell-based threats.
+  These exercises strengthened my understanding of Windows event logging, MITRE ATT&CK-mapped detection, and alert tuning. I plan to expand this lab further by adding more telemetry sources, different simulated attacks, advanced detection logic, and dashboard visualizations.
+</p>
+  
+
 
     <h3>Skills Learned</h3>
     <ul>
@@ -67,7 +125,7 @@
     <ul>
       <li>Initial connectivity issues due to incorrect receiving port settings on the Splunk indexer</li>
       <li>Forwarders failing to send logs until service restarts and permissions were adjusted</li>
-      <li>Understanding and filtering relevant Windows Event IDs for detection use cases</li>
+      <li>RDP connection attempts failing due to enabled account lockout settings in the domain</li>
     </ul>
 
     <p><a href="projects.html">⬅ Back to Projects</a></p>
