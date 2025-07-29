@@ -20,35 +20,51 @@
   <main class="container">
     <h2>🕵️‍♂️ AD Enumeration with BloodHound</h2>
     <p>
-      This page outlines my process of performing Active Directory enumeration in a virtualized home lab using <strong>BloodHound</strong> and <code>bloodhound-python</code>. This included configuring a Windows Server 2022 Domain Controller (DC), setting up proper Kerberos authentication, and using LDAP to collect objects within the domain.
+      This log outlines my process of performing Active Directory enumeration in my home lab using <strong>BloodHound</strong> and <code>bloodhound-python</code>. This included installing Docker Compose to host Bloodhound, connecting the Kali and Windows server machines using <code>bloodhound-python</code>, and pentesting using <code>evil-winrm</code> and Wireshark.
     </p>
 
     <h3>Lab Setup and Networking Configuration</h3>
     <p>
-      The Domain Controller was hosted on Windows Server 2022 with the domain <code>mydomain.com</code>. It had two network adapters (NAT and Host-Only). To avoid conflicting IPs during resolution (e.g., DNS returning both <code>172.16.0.1</code> and <code>10.0.2.15</code>), I disabled the NAT adapter to isolate domain traffic to a single internal network. Kali Linux was connected to the same Host-Only network to interact with the DC.
+      After installing Docker.io on the Kali machine, I ran the following command to have the capabilities to run Bloodhound within the VM: <code>curl -L https://ghst.ly/getbhce | sudo docker-compose -f - up</code>. With the admin password the Docker instance produced, I was able to gain access to the Bloodhound tool to start enumerating from the AD environment. 
+      A problem I ran into while running Bloodhound with Docker was it was taking too many resources within the VM to run so I had to restart the VM with more CPU cores and memory in order to run everything and it ran perfectly after the change.
     </p>
-
-    <img src="screenshots/bloodhound/networking.png" alt="Networking Diagram Screenshot" width="700">
-
-    <h3>DNS, Kerberos & LDAP Troubleshooting</h3>
-    <p>
-      I configured Kali’s <code>/etc/resolv.conf</code> to use the DC’s IP (<code>172.16.0.1</code>) as the DNS server. A valid Kerberos TGT was obtained via <code>kinit k-hamilton@MYDOMAIN.COM</code> and verified using <code>klist</code>. DNS resolution for <code>dc.mydomain.com</code> initially returned two IPs due to the dual NICs, which caused <code>invalid server address</code> errors in BloodHound. This was fixed by disabling the NAT adapter.
-    </p>
-
-    <img src="screenshots/bloodhound/klist.png" alt="klist Output Screenshot" width="700">
-
-    <h3>BloodHound Enumeration</h3>
-    <p>
-      After resolving network and Kerberos issues, I successfully ran <code>bloodhound-python</code> from Kali Linux using the following command:
-    </p>
-
-    <pre><code>bloodhound-python -u k-hamilton@mydomain.com -p YeetSkeet1! -dc dc.mydomain.com -d mydomain.com -c All --dns-tcp</code></pre>
 
     <p>
-      The tool collected data about users, groups, computers, sessions, ACLs, and trusts, outputting JSON files for visualization in the BloodHound GUI.
+      Once I got Bloodhound running successfully, I moved onto using <code>bloodhound-python</code> to start enumerating AD data from the DC machine. To connect Bloodhound with the DC machine I used this command <code>bloodhound-python -u k-hamilton@mydomain.com -p YeetSkeet1! -dc dc.mydomain.com -d mydomain.com -c All --dns-tcp</code> to gain access to the environment under the main admin account.
+      Upon executing this command, I got an error saying that there was an invalid server address being used within the command. The two machines have two network adapters (NAT and Host-Only). To avoid conflicting IPs during resolution (e.g., DNS returning both <code>172.16.0.1</code> and <code>10.0.2.15</code>), I disabled the NAT adapter to isolate domain traffic to a single internal network. Kali Linux was connected to the same Host-Only network to interact with the DC.
+      After resolving the adapter conflict issue, the program successfully outputted the json files that contained the enumerated data from the environment, as shown in the screenshot.
     </p>
 
-    <img src="screenshots/bloodhound/bloodhoundgraph.png" alt="BloodHound Graph Screenshot" width="700">
+    <img src="screenshots/bloodhound/json.png" alt="Networking Diagram Screenshot" width="700">
+
+    <h3>Analyzing AD Enumerated Data using Bloodhound</h3>
+    <p>
+      After obtaining the json files, I imported the data into the Bloodhound tool and started digging deeper into the enumerated data. Bloodhound collected data about users, groups, computers, sessions, ACLs, and trusts, outputting JSON files for visualization in the BloodHound GUI. I started by performing a lookup on the admin account K-HAMILTON@MYHDOMAIN.COM and found general data about the user and account as well as the different groups the account was a part of within the AD environment.
+    </p>
+
+    <img src="screenshots/bloodhound/kham.png" alt="klist Output Screenshot" width="700">
+
+    <p>
+      After experimenting with the admin account, I delved into pentesting the environment by performing a lookup of the group REMOTE DESKTOP USERS@MYDOMAIN.COM to see which users are insecure to allow RDP access from a rogue machine.
+      I marked the JULIET@MYDOMAIN.COM account as my attack vector to pentest the AD environment.
+    </p>
+
+    <img src="screenshots/bloodhound/juliet.png" alt="klist Output Screenshot" width="700">
+
+    <h3>Pentesting using evil-winrm and Wireshark</h3>
+    <p>
+      To utilize Bloodhound in a pentesting environment, I wanted to use the pentesting command line tool <code>evil-winrm</code> within the Kali machine to gain access into the AD environment via an insecure user to expose vulnerability within the AD environment.
+      As seen in the screenshot, I was able to gain access to the Juliet user's command line and therefore able to manipulate the user within the AD environment, deeming that account to be insecure.
+    </p>
+
+    <img src="screenshots/bloodhound/evil.png" alt="BloodHound Graph Screenshot" width="700">
+
+    <p>
+      From a defending machine/blue team perspective, I utilized Wireshark on the DC machine to analyze the incoming traffic from the rogue machine gaining access to the AD environment. After using the following filter <code>tcp.port == 5985 || tcp.port == 5986</code>, I was able to analyze evil-winrm tagged traffic
+      and found the specific packet responsible for authorizing the Kali machine into the environment. After going into the packet contents, I was able to find that the Juliet user account was the insecure account being accessed from the rogue machine.
+    </p>
+
+    <img src="screenshots/bloodhound/wireshark1.png" alt="BloodHound Graph Screenshot" width="700"> <img src="screenshots/bloodhound/wireshark2.png" alt="BloodHound Graph Screenshot" width="700">
 
     <h3>Lessons Learned</h3>
     <ul>
@@ -56,6 +72,7 @@
       <li>How dual NICs can interfere with DNS resolution and LDAP binding</li>
       <li>Kerberos ticket acquisition and troubleshooting with <code>kinit</code> and <code>klist</code></li>
       <li>Using <code>bloodhound-python</code> to enumerate AD objects via LDAP/Kerberos</li>
+      <li>Firewall and port availabitliy troubleshooting using Powershell and dig/nc commands</li>
     </ul>
 
     <h3>Challenges Encountered</h3>
@@ -63,6 +80,7 @@
       <li>LDAP bind failures due to DNS returning multiple IPs for the DC</li>
       <li><code>LDAPSocketOpenError</code> caused by Kerberos misconfiguration and incorrect interface resolution</li>
       <li>Had to disable the NAT adapter and ensure static addressing on the Host-Only network</li>
+      <li>Resource overconsumption when running docker compose and Bloodhound together</li>
     </ul>
 
     <p><a href="projects.html">⬅ Back to Projects</a></p>
