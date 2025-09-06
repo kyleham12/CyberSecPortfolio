@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI-Powered Threat Scoring Pipeline | Kyle D. Hamilton</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <h1>Kyle D. Hamilton</h1>
+      <ul>
+        <li><a href="index.html">About</a></li>
+        <li><a href="projects.html">Projects</a></li>
+        <li><a href="threat-pipeline.html">AI-Powered Threat Scoring Pipeline</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h2>🤖 AI-Powered Threat Scoring Pipeline</h2>
+
+    <p>
+      This project integrates Azure Functions, Event Hubs, and Splunk to build a 
+      threat detection pipeline for my cybersecurity home lab. Logs generated 
+      from simulated attacks are ingested into Azure, enriched with a 
+      <strong>heuristic/AI-powered scoring function</strong>, and forwarded 
+      into Splunk via <strong>Cloudflare Tunnel</strong> for visualization and alerting.
+    </p>
+
+    <h3>📜 Workflow</h3>
+    <ol>
+      <li>💻 Windows DC + Kali Linux lab generates security logs.</li>
+      <li>☁️ Azure Function App ingests logs via HTTP endpoint.</li>
+      <li>🔄 Events are queued into Azure Event Hub.</li>
+      <li>🧮 A scoring function applies rules/AI heuristics to calculate a threat score.</li>
+      <li>🔗 Enriched events are forwarded to Splunk over HEC (via Cloudflare Tunnel).</li>
+      <li>📊 Splunk dashboards show real-time detection with severity labels.</li>
+    </ol>
+
+    <h3>📘 Lessons Learned</h3>
+    <ul>
+      <li>How to build a secure data pipeline from a home lab into Azure and then into Splunk.</li>
+      <li>Why JSON normalization and unwrapping are critical when dealing with Event Hub payloads.</li>
+      <li>How to troubleshoot Splunk HEC ingestion using <code>curl</code> and PowerShell when logs weren’t appearing.</li>
+      <li>The importance of environment variables in Azure Functions (HEC URL, token, EventHub connection) for portability.</li>
+      <li>How Cloudflare Tunnels can securely expose internal Splunk endpoints to Azure without public IPs.</li>
+    </ul>
+
+    <h3>⚠️ Challenges Encountered</h3>
+    <ul>
+      <li>Initial Splunk events all showed <code>threat_score=0.0</code> because the JSON wrapper from Event Hub wasn’t being unwrapped properly.</li>
+      <li>Cloudflare Tunnel setup failed with <code>Error 1033</code> until origin certificates were configured correctly.</li>
+      <li>Debugging PowerShell <code>curl</code> vs. Linux <code>curl</code> differences when posting JSON payloads (escaping issues).</li>
+      <li>Azure CLI errors during <code>az functionapp config appsettings</code> updates due to incorrect syntax with multiple variables.</li>
+      <li>Splunk initially recorded all logs with <code>host=hec.kylehamilton.online</code> until I passed the true <code>host</code> field in the payload.</li>
+    </ul>
+
+    <p><em>Last Modified: September 2025</em></p>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Kyle D. Hamilton</p>
+  </footer>
+</body>
+</html>
