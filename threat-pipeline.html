@@ -38,6 +38,111 @@
       <li>📊 Splunk dashboards show real-time detection with severity labels.</li>
     </ol>
 
+    <section class="project-section" id="lab-logs">
+  <h3>💻 Windows DC + Kali Linux Lab Generates Security Logs</h3>
+  <p>
+    The pipeline begins in my home lab, where a Windows Server domain controller (DC) is configured
+    with auditing policies and Sysmon to emit rich security telemetry while a Kali Linux box
+    performs benign attack simulations (e.g., failed logons, PowerShell execution, process starts).
+    Typical Windows events include <code>4624</code>/<code>4625</code> (logon success/failure),
+    <code>4688</code> (process creation), and PowerShell script block logging (<code>4104</code>).
+    This setup mirrors real enterprise noise and signals so the downstream pipeline can separate
+    routine activity from suspicious behavior.
+  </p>
+  <ul class="screenshot-ideas">
+    <li>Windows Event Viewer filtered to <code>Security</code> → Event ID <code>4625</code> with your lab user/computer names visible.</li>
+    <li>Sysmon <code>4688</code> example showing a PowerShell process start.</li>
+    <li>Wireshark capture on the DC highlighting traffic from your Kali IP (e.g., <code>172.16.0.100</code>).</li>
+    <li>Group Policy setting screenshot showing enabled audit policies or Sysmon config snippet.</li>
+  </ul>
+</section>
+
+<section class="project-section" id="ingest">
+  <h3>☁️ Azure Function App Ingests Logs via HTTP</h3>
+  <p>
+    An Azure Function exposes <code>POST /api/ingest</code>, accepting either a single JSON event
+    or a list of events. On receipt, the function stamps metadata (e.g., <code>ingest_ts</code>,
+    <code>source</code>) and prepares the payload for Event Hubs. App settings (HEC URL/token,
+    Event Hub connection strings, index, TLS verification) are stored as environment variables for
+    portability and secret hygiene. A lightweight health path (<code>/api/score</code>) lets me test
+    the scoring component quickly without sending data through the entire pipeline.
+  </p>
+  <ul class="screenshot-ideas">
+    <li>Azure Portal → Function App Overview showing the public function URL and status.</li>
+    <li>Postman (or <code>curl</code>) sending a sample JSON to <code>/api/ingest</code> with a 200 OK response.</li>
+    <li>Function App → Log stream (or Application Insights) displaying a received request and batch send.</li>
+    <li>App Settings blade with redacted environment variables.</li>
+  </ul>
+</section>
+
+<section class="project-section" id="event-hub">
+  <h3>🔄 Events Are Queued in Azure Event Hub</h3>
+  <p>
+    The ingest function batches events using <code>EventHubProducerClient</code> and publishes them
+    to an Event Hub. Batching provides throughput efficiency and backpressure handling: if a batch
+    approaches the size limit, it’s sent and a new batch begins. Event Hubs acts as the durable,
+    scalable buffer between ingestion and processing, smoothing spikes from bursty lab activity so
+    the consumer can process reliably.
+  </p>
+  <ul class="screenshot-ideas">
+    <li>Event Hubs Namespace → Metrics: “Incoming Messages” and “Throughput (Incoming)” graphs during a test run.</li>
+    <li>Event Hub → Consumer groups panel showing the default consumer group used by the function trigger.</li>
+    <li>Event Hub → Diagnostic settings enabled (redacted) to show observability posture.</li>
+  </ul>
+</section>
+
+<section class="project-section" id="scoring">
+  <h3>🧮 Scoring Function Applies Rules/AI Heuristics</h3>
+  <p>
+    A consumer Function (Event Hub trigger) unwraps messy JSON (handles BOM, double-encoded strings,
+    and common envelopes like <code>event</code>, <code>records</code>, <code>properties</code>), then
+    normalizes fields (<code>EventCode</code> → <code>event_code</code>, <code>Image</code> → <code>process</code>, etc.).
+    A rule-based scorer assigns points for signals such as failed logons (<code>4625</code>), PowerShell
+    activity, and off-hours activity; the score (0–100) maps to labels <em>low</em>, <em>medium</em>, or
+    <em>high</em>. This design keeps the pipeline free-tier friendly while providing a drop-in path to a
+    trained ML model later (same interface, richer features).
+  </p>
+  <ul class="screenshot-ideas">
+    <li>Function “Monitor” tab (or logs) showing parsed input, computed <code>threat_score</code>, and label.</li>
+    <li>Successful call to <code>/api/score</code> in Postman returning <code>{"scores":[...],"labels":[...]}</code>.</li>
+    <li>A table (in your docs) contrasting raw event vs. normalized fields used by the scorer.</li>
+  </ul>
+</section>
+
+<section class="project-section" id="hec-forward">
+  <h3>🔗 Enriched Events Forwarded to Splunk over HEC (via Cloudflare Tunnel)</h3>
+  <p>
+    After scoring, the enriched event is posted to Splunk HEC with retries and optional index override.
+    The function sets the Splunk event <code>time</code> from the original <code>_time</code> (when present) and
+    passes through the true <code>host</code> to preserve source identity. A Cloudflare Tunnel securely exposes
+    the HEC endpoint to Azure without opening a public listener on my network, keeping tokens and transport
+    under TLS while avoiding inbound firewall rules.
+  </p>
+  <ul class="screenshot-ideas">
+    <li>Splunk HEC <code>/services/collector/health</code> page (200 OK), with URL/tokens redacted.</li>
+    <li>Cloudflare Zero Trust dashboard showing the active tunnel and route to your HEC origin.</li>
+    <li>Splunk search result of a single posted event showing <code>threat_score</code>, <code>threat_label</code>, and the correct <code>host</code>.</li>
+  </ul>
+</section>
+
+<section class="project-section" id="dashboards">
+  <h3>📊 Splunk Dashboards Show Real-Time Detection</h3>
+  <p>
+    In Splunk, I visualize the enriched stream with panels for events over time by severity, top
+    users generating <code>4625</code> failures, and the most common suspicious processes (e.g., PowerShell).
+    Severity labels drive drilldowns to raw events for investigation, and saved searches can trigger
+    alerts when high-risk patterns appear. This closes the loop: simulated activity in the lab surfaces
+    as labeled insights in Splunk within seconds.
+  </p>
+  <ul class="screenshot-ideas">
+    <li>Main dashboard: timechart split by <code>threat_label</code> with real-time updates.</li>
+    <li>Top users/hosts table and a panel highlighting PowerShell-tagged events.</li>
+    <li>Alert configuration (redacted) for “High severity spike” with an example alert notification.</li>
+    <li>Drilldown view showing the raw JSON of a single high-scored event.</li>
+  </ul>
+</section>
+
+
     <h3>📘 Lessons Learned</h3>
     <ul>
       <li>How to build a secure data pipeline from a home lab into Azure and then into Splunk.</li>
