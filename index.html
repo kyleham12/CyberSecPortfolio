@@ -18,22 +18,27 @@
   </header>
 
   <main class="container">
-    <div class="profile-photo">
-        <!-- Use your uploaded image saved as headshot.jpg -->
-        <picture>
-          <source srcset="screenshots/headshot.jpeg" type="image/jpeg">
-          <img src="screenshots/headshot.jpeg" alt="Professional headshot of Kyle D. Hamilton" loading="eager" width="200" height="275">
-        </picture>
-      </div>
+    <div style="display: flex; align-items: flex-start; gap: 20px;">
+  <!-- Photo -->
+      <img src="headshot.jpeg" alt="Kyle D. Hamilton" style="width: 250px; border-radius: 8px;">
     
-    <section class="about">
-      <h2>👋 About Me</h2>
-      <p>
-        I’m a recent class of 2024 Computer Science graduate from San José State University with a focus in Cybersecurity. I enjoy hands-on work in IT, network security, and troubleshooting environments. My passion for tech drives my home lab experimentation and continuous learning.
-        You can find my experiments in my evolving home lab under the <a href="projects.html">Projects</a> tab and see what I've been up to regarding learning about today's industry leading security tools.
-      </p>
-      <a class="button" href="resume.pdf" download>📄 Download My Resume</a>
-    </section>
+      <!-- Text Section -->
+      <div>
+        <h2>👋 About Me</h2>
+        <p>
+          I’m a recent class of 2024 Computer Science graduate from San José State University 
+          with a focus in Cybersecurity. I enjoy hands-on work in IT, network security, and 
+          troubleshooting environments. My passion for tech drives my home lab experimentation 
+          and continuous learning. You can find my experiments in my evolving home lab under the 
+          <a href="projects.html">Projects</a> tab and see what I've been up to regarding 
+          learning about today's industry leading security tools.
+        </p>
+        <a href="resume.pdf" class="btn" style="display: inline-block; background: #0d6efd; color: white; padding: 10px 15px; border-radius: 5px; text-decoration: none;">
+          📄 Download My Resume
+        </a>
+      </div>
+    </div>
+
 
     <section class="contact">
       <h2>📫 Contact</h2>
