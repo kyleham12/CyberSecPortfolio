@@ -18,7 +18,7 @@
   </header>
 
   <main class="container">
-    <h2>🤖 AI-Powered Threat Scoring Pipeline</h2>
+    <h2>AI-Powered Threat Scoring Pipeline</h2>
 
     <p>
       This project integrates Azure Functions, Event Hubs, and Splunk to build a 
@@ -28,18 +28,18 @@
       into Splunk via <strong>Cloudflare Tunnel</strong> for visualization and alerting.
     </p>
 
-    <h3>📜 Workflow</h3>
+    <h3>Workflow</h3>
     <ol>
-      <li>💻 Windows DC + Kali Linux lab generates security logs.</li>
-      <li>☁️ Azure Function App ingests logs via HTTP endpoint.</li>
-      <li>🔄 Events are queued into Azure Event Hub.</li>
-      <li>🧮 A scoring function applies rules/AI heuristics to calculate a threat score.</li>
-      <li>🔗 Enriched events are forwarded to Splunk over HEC (via Cloudflare Tunnel).</li>
-      <li>📊 Splunk dashboards show real-time detection with severity labels.</li>
+      <li>Windows DC + Kali Linux lab generates security logs.</li>
+      <li>Azure Function App ingests logs via HTTP endpoint.</li>
+      <li>Events are queued into Azure Event Hub.</li>
+      <li>A scoring function applies rules/AI heuristics to calculate a threat score.</li>
+      <li>Enriched events are forwarded to Splunk over HEC (via Cloudflare Tunnel).</li>
+      <li>Splunk dashboards show real-time detection with severity labels.</li>
     </ol>
 
     <section class="project-section" id="lab-logs">
-  <h3>💻 Windows DC + Kali Linux Lab Generates Security Logs</h3>
+  <h3>Windows DC + Kali Linux Lab Generates Security Logs</h3>
   <p>
     The pipeline begins in my home lab, where a Windows Server domain controller (DC) is configured
     with auditing policies and Sysmon to emit rich security telemetry while a Kali Linux box
@@ -58,7 +58,7 @@
 </section>
 
 <section class="project-section" id="ingest">
-  <h3>☁️ Azure Function App Ingests Logs via HTTP</h3>
+  <h3>Azure Function App Ingests Logs via HTTP</h3>
   <p>
     An Azure Function exposes <code>POST /api/ingest</code>, accepting either a single JSON event
     or a list of events. On receipt, the function stamps metadata (e.g., <code>ingest_ts</code>,
@@ -76,7 +76,7 @@
 </section>
 
 <section class="project-section" id="event-hub">
-  <h3>🔄 Events Are Queued in Azure Event Hub</h3>
+  <h3>Events Are Queued in Azure Event Hub</h3>
   <p>
     The ingest function batches events using <code>EventHubProducerClient</code> and publishes them
     to an Event Hub. Batching provides throughput efficiency and backpressure handling: if a batch
@@ -92,25 +92,48 @@
 </section>
 
 <section class="project-section" id="scoring">
-  <h3>🧮 Scoring Function Applies Rules/AI Heuristics</h3>
+  <h3>Scoring: Heuristics + Optional ML (fused 0–100)</h3>
   <p>
-    A consumer Function (Event Hub trigger) unwraps messy JSON (handles BOM, double-encoded strings,
-    and common envelopes like <code>event</code>, <code>records</code>, <code>properties</code>), then
-    normalizes fields (<code>EventCode</code> → <code>event_code</code>, <code>Image</code> → <code>process</code>, etc.).
-    A rule-based scorer assigns points for signals such as failed logons (<code>4625</code>), PowerShell
-    activity, and off-hours activity; the score (0–100) maps to labels <em>low</em>, <em>medium</em>, or
-    <em>high</em>. This design keeps the pipeline free-tier friendly while providing a drop-in path to a
-    trained ML model later (same interface, richer features).
+    The Event Hub consumer now performs a robust unwrap of messy JSON (handles UTF-8 BOM, double-encoded strings, and common envelopes like
+    <code>event</code>, <code>body</code>, <code>records</code>, and <code>properties</code>), then normalizes fields
+    (<code>EventCode</code> → <code>event_code</code>, <code>Image</code>/<code>command</code> → <code>process</code>, user aliases → <code>username</code>, IP aliases → <code>src_ip</code>).
+    A rule-based scorer assigns points for signals such as failed logons (<code>4625</code>), PowerShell activity, and off-hours behavior. In parallel, an
+    <em>optional</em> ML scorer (HTTP endpoint) receives compact, stable features (e.g., <code>is_4625</code>, <code>is_powershell</code>, <code>off_hours</code>, <code>hour</code>, <code>name_has_admin</code>, <code>process_len</code>).
+    ML scores (0–1 or 0–100) are auto-calibrated to 0–100 and fused with the heuristic via a max rule. The event is enriched with
+    <code>heuristic_score</code>, <code>ml_score</code> (if available), <code>threat_score</code>, <code>threat_label</code> (<em>low</em>/<em>medium</em>/<em>high</em>), and
+    <code>enriched_by</code> (<code>heuristic</code> or <code>heuristic+ml</code>), and then shipped to Splunk HEC with retries. If ML is unavailable or slow, the pipeline
+    remains free-tier friendly and falls back to heuristics automatically.
   </p>
-  <ul class="screenshot-ideas">
-    <li>Function “Monitor” tab (or logs) showing parsed input, computed <code>threat_score</code>, and label.</li>
-    <li>Successful call to <code>/api/score</code> in Postman returning <code>{"scores":[...],"labels":[...]}</code>.</li>
-    <li>A table (in your docs) contrasting raw event vs. normalized fields used by the scorer.</li>
-  </ul>
+
+  <h4>Ingest Function: <code>POST /api/ingest</code></h4>
+  <p>
+    Accepts a single JSON object or a list of objects, stamps <code>ingest_ts</code> and <code>source</code>, and writes them to Azure Event Hubs in batches.
+    This is the lightweight front door for any producer (webhooks, Postman, scripts) without coupling them to Splunk or the scoring logic.
+  </p>
+
+  <h4>Event Hub Consumer: <code>eh_consumer</code></h4>
+  <p>
+    Triggered by new Event Hub messages, it decodes and normalizes records, builds features, computes the heuristic score, performs batched ML inference (if <code>ML_ENDPOINT_URL</code> is configured),
+    fuses scores to finalize <code>threat_score</code> and <code>threat_label</code>, and forwards enriched events to Splunk HEC. It preserves <code>host</code> and <code>_time</code> when present.
+  </p>
+
+  <h4>Ad-hoc Scoring API: <code>POST /api/score</code></h4>
+  <p>
+    Accepts <code>{"inputs":[{...}, ...]}</code> where each item is a raw event. Returns heuristic, ML (if configured), and fused results:
+  </p>
+  <pre><code>{
+  "heuristic_scores": [90.0, ...],
+  "ml_scores": [87.5, ...],      // or null when ML disabled/unavailable
+  "final_scores": [90.0, ...],
+  "labels": ["high", ...]
+}</code></pre>
+
+  <p>Visit my repository for all the pipeline functions I used in Azure: <a href="https://github.com/kyleham12/pipelinefunctions">pipelinefunctions</a></p>
 </section>
 
+
 <section class="project-section" id="hec-forward">
-  <h3>🔗 Enriched Events Forwarded to Splunk over HEC (via Cloudflare Tunnel)</h3>
+  <h3>Enriched Events Forwarded to Splunk over HEC (via Cloudflare Tunnel)</h3>
   <p>
     After scoring, the enriched event is posted to Splunk HEC with retries and optional index override.
     The function sets the Splunk event <code>time</code> from the original <code>_time</code> (when present) and
@@ -126,7 +149,7 @@
 </section>
 
 <section class="project-section" id="dashboards">
-  <h3>📊 Splunk Dashboards Show Real-Time Detection</h3>
+  <h3>Splunk Dashboards Show Real-Time Detection</h3>
   <p>
     In Splunk, I visualize the enriched stream with panels for events over time by severity, top
     users generating <code>4625</code> failures, and the most common suspicious processes (e.g., PowerShell).
@@ -143,7 +166,7 @@
 </section>
 
 
-    <h3>📘 Lessons Learned</h3>
+    <h3>Lessons Learned</h3>
     <ul>
       <li>How to build a secure data pipeline from a home lab into Azure and then into Splunk.</li>
       <li>Why JSON normalization and unwrapping are critical when dealing with Event Hub payloads.</li>
@@ -152,7 +175,7 @@
       <li>How Cloudflare Tunnels can securely expose internal Splunk endpoints to Azure without public IPs.</li>
     </ul>
 
-    <h3>⚠️ Challenges Encountered</h3>
+    <h3>Challenges Encountered</h3>
     <ul>
       <li>Initial Splunk events all showed <code>threat_score=0.0</code> because the JSON wrapper from Event Hub wasn’t being unwrapped properly.</li>
       <li>Cloudflare Tunnel setup failed with <code>Error 1033</code> until origin certificates were configured correctly.</li>
